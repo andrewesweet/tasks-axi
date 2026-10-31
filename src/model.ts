@@ -128,11 +128,9 @@ export interface TaskPatch {
   /** Set a structured hold, or clear it with null. */
   hold?: Hold | null;
   priority?: number;
-  /** Replace the whole label set (sorted deduplicated); undefined leaves it unchanged. */
-  labels?: string[];
-  /** Add to the current locked set after removals; a labels replacement wins. */
+  /** Add to the current locked set after removals. */
   addLabels?: string[];
-  /** Remove from the current locked set before additions; a labels replacement wins. */
+  /** Remove from the current locked set before additions. */
   removeLabels?: string[];
   meta?: Record<string, unknown>;
 }
@@ -173,7 +171,5 @@ export interface TaskQuery {
   state?: State;
   repo?: string;
   kind?: string;
-  /** Match only tasks carrying every requested label. */
-  labels?: string[];
   limit?: number;
 }
