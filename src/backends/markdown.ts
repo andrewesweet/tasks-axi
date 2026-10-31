@@ -8,11 +8,7 @@ import {
 import { dirname, resolve } from "node:path";
 import { AxiError } from "../errors.js";
 import { validateDependencyId, validateId } from "../id.js";
-import {
-  canonicalizeLabels,
-  normalizeLabels,
-  sameLabels,
-} from "../labels.js";
+import { canonicalizeLabels, normalizeLabels, sameLabels } from "../labels.js";
 import type {
   Dep,
   Hold,
@@ -749,10 +745,7 @@ export class MarkdownStore implements Store {
           markChanged("priority");
         }
       }
-      if (
-        patch.addLabels !== undefined ||
-        patch.removeLabels !== undefined
-      ) {
+      if (patch.addLabels !== undefined || patch.removeLabels !== undefined) {
         const removeLabels = normalizeLabels(patch.removeLabels);
         const labels = canonicalizeLabels([
           ...(task.labels ?? []).filter(
