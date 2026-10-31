@@ -34,9 +34,7 @@ export function validateLabel(flag: string, raw: string): string {
     throw new AxiError(
       `invalid label "${name}": use ${LABEL_MAX_LENGTH} or fewer characters of lowercase letters, digits, '-', '_', '.', '/', ':'`,
       "VALIDATION_ERROR",
-      [
-        `e.g. ${flag} topic:t3 or ${flag} release-q3/checkout`,
-      ],
+      [`e.g. ${flag} topic:t3 or ${flag} release-q3/checkout`],
     );
   }
   return name;

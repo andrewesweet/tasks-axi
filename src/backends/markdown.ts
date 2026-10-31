@@ -764,7 +764,9 @@ export class MarkdownStore implements Store {
         } else {
           const removeLabels = normalizeLabels(patch.removeLabels);
           labels = canonicalizeLabels([
-            ...(task.labels ?? []).filter((label) => !removeLabels.includes(label)),
+            ...(task.labels ?? []).filter(
+              (label) => !removeLabels.includes(label),
+            ),
             ...normalizeLabels(patch.addLabels),
           ]);
         }
