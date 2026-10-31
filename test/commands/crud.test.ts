@@ -939,6 +939,39 @@ describe("crud commands", () => {
       }
     });
 
+    it.each([
+      {
+        name: "additions", initial: ["alpha"],
+        first: ["--label", "beta"], second: ["--label", "gamma"],
+        expected: ["alpha", "beta", "gamma"],
+      },
+      {
+        name: "removals", initial: ["alpha", "beta"],
+        first: ["--unlabel", "alpha"], second: ["--unlabel", "beta"],
+        expected: [],
+      },
+      {
+        name: "mixed edits", initial: ["alpha", "beta"],
+        first: ["--unlabel", "alpha"], second: ["--label", "gamma"],
+        expected: ["beta", "gamma"],
+      },
+    ])("preserves concurrent label $name through update", async ({ initial, first, second, expected }) => {
+      const b = makeBacklog();
+      try {
+        await b.store.create({ id: "labels-race", title: "work", labels: initial });
+        const outputs = await Promise.all([
+          updateCommand(["labels-race", ...first, "--json"], b.ctx),
+          updateCommand(["labels-race", ...second, "--json"], b.ctx),
+        ]);
+        for (const output of outputs) {
+          expect(JSON.parse(output)).toMatchObject({ ok: true, changed: ["labels"] });
+        }
+        expect((await b.store.get("labels-race"))?.labels ?? []).toEqual(expected);
+      } finally {
+        b.cleanup();
+      }
+    });
+
     it("rejects --label and --unlabel on the same name", async () => {
       const b = makeBacklog();
       try {

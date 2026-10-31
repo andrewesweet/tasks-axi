@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { MarkdownStore } from "../../src/backends/markdown.js";
 import { readyTasks } from "../../src/derive.js";
 import { AxiError } from "../../src/errors.js";
+import type { TaskPatch } from "../../src/model.js";
 import {
   FIRSTMATE_FIXTURE,
   makeBacklog,
@@ -1542,6 +1543,91 @@ describe("MarkdownStore", () => {
   });
 
   describe("labels", () => {
+    it.each<{
+      name: string;
+      initial: string[];
+      first: TaskPatch;
+      second: TaskPatch;
+      expected: string[];
+    }>([
+      {
+        name: "additions", initial: ["alpha"],
+        first: { addLabels: ["beta"] }, second: { addLabels: ["gamma"] },
+        expected: ["alpha", "beta", "gamma"],
+      },
+      {
+        name: "removals", initial: ["alpha", "beta"],
+        first: { removeLabels: ["alpha"] }, second: { removeLabels: ["beta"] },
+        expected: [],
+      },
+      {
+        name: "mixed edits", initial: ["alpha", "beta"],
+        first: { removeLabels: ["alpha"] }, second: { addLabels: ["gamma"] },
+        expected: ["beta", "gamma"],
+      },
+    ])("preserves concurrent $name against the locked label set", async ({ initial, first, second, expected }) => {
+      const b = makeBacklog();
+      try {
+        await b.store.create({ id: "labels-lock", title: "work", labels: initial });
+        const other = new MarkdownStore({ path: b.path });
+        const results = await Promise.all([
+          b.store.update("labels-lock", first),
+          other.update("labels-lock", second),
+        ]);
+        expect(results.map((result) => result.changed)).toEqual([["labels"], ["labels"]]);
+        expect((await b.store.get("labels-lock"))?.labels).toEqual(expected.length > 0 ? expected : undefined);
+      } finally {
+        b.cleanup();
+      }
+    });
+
+    it("normalizes set operations, removes before adding, and skips unchanged writes", async () => {
+      const b = makeBacklog();
+      try {
+        await b.store.create({ id: "labels-ops", title: "work", labels: ["alpha"] });
+        const before = b.read();
+        const unchanged = await b.store.update("labels-ops", {
+          removeLabels: [" alpha ", "absent"],
+          addLabels: ["alpha", " alpha ", ""],
+        });
+        expect(unchanged.changed).toEqual([]);
+        expect(unchanged.task.labels).toEqual(["alpha"]);
+        expect(b.read()).toBe(before);
+        const emptied = await b.store.update("labels-ops", { removeLabels: [" alpha "] });
+        expect(emptied.changed).toEqual(["labels"]);
+        expect(emptied.task).not.toHaveProperty("labels");
+        expect((await b.store.get("labels-ops"))).not.toHaveProperty("labels");
+      } finally {
+        b.cleanup();
+      }
+    });
+
+    it.each([{ labels: ["beta"] }, { labels: [] }])("lets replacement $labels override label set operations", async ({ labels }) => {
+      const b = makeBacklog();
+      try {
+        await b.store.create({ id: "labels-replace", title: "work", labels: ["alpha"] });
+        const result = await b.store.update("labels-replace", {
+          labels, addLabels: ["gamma"], removeLabels: ["beta"],
+        });
+        expect(result.changed).toEqual(["labels"]);
+        expect(result.task.labels).toEqual(labels.length > 0 ? labels : undefined);
+      } finally {
+        b.cleanup();
+      }
+    });
+
+    it.each(["addLabels", "removeLabels"] as const)("rejects unsafe %s without changing persisted state", async (field) => {
+      const b = makeBacklog();
+      try {
+        await b.store.create({ id: "labels-invalid", title: "work", labels: ["alpha"] });
+        const before = b.read();
+        await expect(b.store.update("labels-invalid", { [field]: ["a,b"] })).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+        expect(b.read()).toBe(before);
+      } finally {
+        b.cleanup();
+      }
+    });
+
     it("renders created labels as one canonical token and reads them back", async () => {
       const b = makeBacklog();
       try {

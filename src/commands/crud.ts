@@ -24,7 +24,7 @@ import {
   validateDependencyId,
   validateId,
 } from "../id.js";
-import { canonicalizeLabels, matchesLabels, validateLabel } from "../labels.js";
+import { matchesLabels, validateLabel } from "../labels.js";
 import {
   STATES,
   type Dep,
@@ -585,20 +585,8 @@ export async function updateCommand(
   const addLinks = parseLinks(pr, report);
   if (addLinks.length > 0) patch.addLinks = addLinks;
 
-  const current = await store.get(id);
-  if (!current) {
-    throw notFound(id, { globals: context?.suggestionGlobals });
-  }
-
-  if (addLabels.length > 0 || removeLabels.length > 0) {
-    // update mutates one label at a time on top of the current set: --label
-    // unions into it, --unlabel subtracts from it. A replacement equal to the
-    // current set still lands in the patch so the backend reports `already`.
-    patch.labels = canonicalizeLabels([
-      ...(current.labels ?? []),
-      ...addLabels,
-    ]).filter((label) => !removeLabels.includes(label));
-  }
+  if (addLabels.length > 0) patch.addLabels = addLabels;
+  if (removeLabels.length > 0) patch.removeLabels = removeLabels;
 
   if (Object.keys(patch).length === 0) {
     throw new AxiError("Nothing to update", "VALIDATION_ERROR", [
@@ -606,6 +594,9 @@ export async function updateCommand(
     ]);
   }
 
+  if (!(await store.get(id))) {
+    throw notFound(id, { globals: context?.suggestionGlobals });
+  }
   const result = await store.update(id, patch);
   const task = result.task;
   const changed = orderUpdateChanges(result.changed);

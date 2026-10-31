@@ -130,6 +130,10 @@ export interface TaskPatch {
   priority?: number;
   /** Replace the whole label set (sorted deduplicated); undefined leaves it unchanged. */
   labels?: string[];
+  /** Add to the current locked set after removals; a labels replacement wins. */
+  addLabels?: string[];
+  /** Remove from the current locked set before additions; a labels replacement wins. */
+  removeLabels?: string[];
   meta?: Record<string, unknown>;
 }
 
