@@ -7,10 +7,10 @@ import type { Task } from "./model.js";
  * markdown `(labels: a, b)` token is idempotent across re-renders.
  *
  * Name validation happens at the CLI boundary (conservative charset, bounded
- * length). The grammar and the markdown backend stay lenient about what a
- * hand-edited file carries — like dangling `blocked-by` ids — but enforce the
- * token-safety invariants (no commas, parentheses, or line breaks) that keep
- * the canonical tag parseable.
+ * length). The grammar accepts hand-edited values without name validation,
+ * like dangling `blocked-by` ids. Backend create and label-update operations
+ * enforce token safety (no commas, parentheses, or line breaks) on supplied
+ * values to keep the canonical tag parseable.
  */
 
 /** Lowercase letters, digits, `-`, `_`, `.`, `/`, `:` (the `-` is last). */
