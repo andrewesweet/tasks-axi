@@ -104,3 +104,17 @@ Keep this file for knowledge useful to almost every future agent session in this
 Do not repeat what the codebase already shows; point to the authoritative file or command instead.
 Prefer rewriting or pruning existing entries over appending new ones.
 When updating this file, preserve this bar for all agents and keep entries concise.
+
+## Agent skills
+
+### Issue tracker
+
+Work items live in an external tasks-axi backlog; GitHub issues are used only for outward-facing discussion, and tasks touching GitHub note a `gh:<owner>/<repo>#<n>` pointer. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+GitHub issues use the five default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` at the repo root is the glossary; ADRs live in `docs/adr/` when they exist. See `docs/agents/domain.md`.
