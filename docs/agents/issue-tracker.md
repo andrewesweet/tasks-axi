@@ -15,4 +15,4 @@ Add a task to the tasks-axi backlog, or update the existing task. Create a GitHu
 
 ## When a skill says "fetch the relevant ticket"
 
-Read the task from the backlog with the tasks-axi CLI (for example `npx -y tasks-axi show <id> --json`). For outward-facing context, follow the task's `gh:<owner>/<repo>#<n>` pointer with `gh issue view` or `gh pr view`.
+Read the task from the backlog with the tasks-axi CLI (for example `npx -y tasks-axi show <id> --full`). For outward-facing context, follow the task's `gh:<owner>/<repo>#<n>` pointer with `gh issue view` or `gh pr view`.
