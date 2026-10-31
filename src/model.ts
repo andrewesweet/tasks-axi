@@ -78,6 +78,8 @@ export interface Task {
   hold?: Hold;
   /** 0-4, optional (borrowed from beads; firstmate orders by list position). */
   priority?: number;
+  /** Topic/scenario tags, a sorted deduplicated set. Rendered as `(labels: a, b)`. */
+  labels?: string[];
   /** Maps to `(since ...)`. */
   created?: string;
   updated?: string;
@@ -101,6 +103,8 @@ export interface TaskInput {
   deps?: Dep[];
   hold?: Hold;
   priority?: number;
+  /** Topic/scenario tags; normalized to a sorted deduplicated set. */
+  labels?: string[];
   created?: string | null;
   closed?: string;
   /** Accepted only with kind=public-followup through the dedicated command path. */
@@ -124,6 +128,12 @@ export interface TaskPatch {
   /** Set a structured hold, or clear it with null. */
   hold?: Hold | null;
   priority?: number;
+  /** Replace the whole label set (sorted deduplicated); undefined leaves it unchanged. */
+  labels?: string[];
+  /** Add to the current locked set after removals; a labels replacement wins. */
+  addLabels?: string[];
+  /** Remove from the current locked set before additions; a labels replacement wins. */
+  removeLabels?: string[];
   meta?: Record<string, unknown>;
 }
 
@@ -134,6 +144,7 @@ export type TaskUpdateChange =
   | "repo"
   | "kind"
   | "priority"
+  | "labels"
   | "links"
   | "hold"
   | "meta";
@@ -162,5 +173,7 @@ export interface TaskQuery {
   state?: State;
   repo?: string;
   kind?: string;
+  /** Match only tasks carrying every requested label. */
+  labels?: string[];
   limit?: number;
 }
