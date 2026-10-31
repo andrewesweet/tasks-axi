@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/andrewesweet/tasks-axi/compare/tasks-axi-v0.2.6...tasks-axi-v0.2.7) (2026-10-31)
+
+
+### Features
+
+* add task labels and label filters ([#1](https://github.com/andrewesweet/tasks-axi/issues/1)) ([7ba2173](https://github.com/andrewesweet/tasks-axi/commit/7ba217347c6e64431138fb98847b5bd052551549))
+
 ## [0.2.6](https://github.com/kunchenguid/tasks-axi/compare/tasks-axi-v0.2.5...tasks-axi-v0.2.6) (2026-09-22)
 
 
