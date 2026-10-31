@@ -738,14 +738,7 @@ describe("state commands", () => {
       try {
         await addCommand(["ready-a1", "one tag", "--label", "alpha"], b.ctx);
         await addCommand(
-          [
-            "ready-ab1",
-            "two tags",
-            "--label",
-            "alpha",
-            "--label",
-            "beta",
-          ],
+          ["ready-ab1", "two tags", "--label", "alpha", "--label", "beta"],
           b.ctx,
         );
         const one = await readyCommand(["--label", "alpha"], b.ctx);

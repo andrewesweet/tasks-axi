@@ -174,7 +174,8 @@ describe("markdown grammar", () => {
     });
 
     it("keeps an unmutated labels line byte-exact across a round-trip", () => {
-      const src = "# Backlog\n\n## Queued\n- [ ] topic-q1 - tagged work (labels: topic:t3, alpha)\n";
+      const src =
+        "# Backlog\n\n## Queued\n- [ ] topic-q1 - tagged work (labels: topic:t3, alpha)\n";
       expect(renderBacklog(parseBacklog(src))).toBe(src);
     });
 
@@ -533,7 +534,8 @@ describe("markdown grammar", () => {
     });
 
     it("normalizes a hand-written labels token on a dirty re-render", () => {
-      const src = "# Backlog\n\n## Queued\n- [ ] topic-q1 - tagged work (labels: topic:t3, alpha, topic:t3)\n";
+      const src =
+        "# Backlog\n\n## Queued\n- [ ] topic-q1 - tagged work (labels: topic:t3, alpha, topic:t3)\n";
       const normalized =
         "# Backlog\n\n## Queued\n- [ ] topic-q1 - tagged work (labels: alpha, topic:t3)\n";
       const doc = parseBacklog(src);

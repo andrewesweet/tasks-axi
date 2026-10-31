@@ -244,10 +244,7 @@ describe("public-followup commands", () => {
     );
     try {
       await add(b);
-      await updateCommand(
-        ["public-final-ab", "--label", "topic:t3"],
-        b.ctx,
-      );
+      await updateCommand(["public-final-ab", "--label", "topic:t3"], b.ctx);
       const source = b.read();
       expect(source).toContain("(labels: topic:t3)");
       expect(source).toContain("<!-- tasks-axi:public-followup/v1:");
@@ -255,9 +252,7 @@ describe("public-followup commands", () => {
       const task = await b.store.get("public-final-ab");
       expect(task?.labels).toEqual(["topic:t3"]);
       await mvCommand(["public-final-ab", "--to", target.path], b.ctx);
-      expect(readFileSync(target.path, "utf8")).toContain(
-        "(labels: topic:t3)",
-      );
+      expect(readFileSync(target.path, "utf8")).toContain("(labels: topic:t3)");
     } finally {
       b.cleanup();
       target.cleanup();

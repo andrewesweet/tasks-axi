@@ -687,7 +687,10 @@ describe("crud commands", () => {
       const b = makeBacklog();
       try {
         await addCommand(["list-s1", "queued", "--label", "alpha"], b.ctx);
-        await addCommand(["list-s2", "started", "--label", "alpha", "--start"], b.ctx);
+        await addCommand(
+          ["list-s2", "started", "--label", "alpha", "--start"],
+          b.ctx,
+        );
         const out = await listCommand(
           ["--state", "in_flight", "--label", "alpha"],
           b.ctx,
@@ -703,14 +706,7 @@ describe("crud commands", () => {
       const b = makeBacklog();
       try {
         await addCommand(
-          [
-            "list-f1",
-            "tagged",
-            "--label",
-            "alpha",
-            "--label",
-            "topic:t3",
-          ],
+          ["list-f1", "tagged", "--label", "alpha", "--label", "topic:t3"],
           b.ctx,
         );
         const out = await listCommand(["--fields", "labels"], b.ctx);
@@ -899,13 +895,7 @@ describe("crud commands", () => {
           b.ctx,
         );
         const out = await updateCommand(
-          [
-            "label-update-q1",
-            "--label",
-            "topic:t3",
-            "--unlabel",
-            "alpha",
-          ],
+          ["label-update-q1", "--label", "topic:t3", "--unlabel", "alpha"],
           b.ctx,
         );
         expect(out).toContain("ok: updated label-update-q1 (labels)");
@@ -924,13 +914,7 @@ describe("crud commands", () => {
           b.ctx,
         );
         await updateCommand(
-          [
-            "label-union-q1",
-            "--label",
-            "topic:t3",
-            "--label",
-            "alpha",
-          ],
+          ["label-union-q1", "--label", "topic:t3", "--label", "alpha"],
           b.ctx,
         );
         expect(b.read()).toContain("(labels: alpha, topic:t3)");
@@ -941,36 +925,54 @@ describe("crud commands", () => {
 
     it.each([
       {
-        name: "additions", initial: ["alpha"],
-        first: ["--label", "beta"], second: ["--label", "gamma"],
+        name: "additions",
+        initial: ["alpha"],
+        first: ["--label", "beta"],
+        second: ["--label", "gamma"],
         expected: ["alpha", "beta", "gamma"],
       },
       {
-        name: "removals", initial: ["alpha", "beta"],
-        first: ["--unlabel", "alpha"], second: ["--unlabel", "beta"],
+        name: "removals",
+        initial: ["alpha", "beta"],
+        first: ["--unlabel", "alpha"],
+        second: ["--unlabel", "beta"],
         expected: [],
       },
       {
-        name: "mixed edits", initial: ["alpha", "beta"],
-        first: ["--unlabel", "alpha"], second: ["--label", "gamma"],
+        name: "mixed edits",
+        initial: ["alpha", "beta"],
+        first: ["--unlabel", "alpha"],
+        second: ["--label", "gamma"],
         expected: ["beta", "gamma"],
       },
-    ])("preserves concurrent label $name through update", async ({ initial, first, second, expected }) => {
-      const b = makeBacklog();
-      try {
-        await b.store.create({ id: "labels-race", title: "work", labels: initial });
-        const outputs = await Promise.all([
-          updateCommand(["labels-race", ...first, "--json"], b.ctx),
-          updateCommand(["labels-race", ...second, "--json"], b.ctx),
-        ]);
-        for (const output of outputs) {
-          expect(JSON.parse(output)).toMatchObject({ ok: true, changed: ["labels"] });
+    ])(
+      "preserves concurrent label $name through update",
+      async ({ initial, first, second, expected }) => {
+        const b = makeBacklog();
+        try {
+          await b.store.create({
+            id: "labels-race",
+            title: "work",
+            labels: initial,
+          });
+          const outputs = await Promise.all([
+            updateCommand(["labels-race", ...first, "--json"], b.ctx),
+            updateCommand(["labels-race", ...second, "--json"], b.ctx),
+          ]);
+          for (const output of outputs) {
+            expect(JSON.parse(output)).toMatchObject({
+              ok: true,
+              changed: ["labels"],
+            });
+          }
+          expect((await b.store.get("labels-race"))?.labels ?? []).toEqual(
+            expected,
+          );
+        } finally {
+          b.cleanup();
         }
-        expect((await b.store.get("labels-race"))?.labels ?? []).toEqual(expected);
-      } finally {
-        b.cleanup();
-      }
-    });
+      },
+    );
 
     it("rejects --label and --unlabel on the same name", async () => {
       const b = makeBacklog();
