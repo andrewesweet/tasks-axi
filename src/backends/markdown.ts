@@ -8,6 +8,12 @@ import {
 import { dirname, resolve } from "node:path";
 import { AxiError } from "../errors.js";
 import { validateDependencyId, validateId } from "../id.js";
+import {
+  canonicalizeLabels,
+  matchesLabels,
+  normalizeLabels,
+  sameLabels,
+} from "../labels.js";
 import type {
   Dep,
   Hold,
@@ -292,6 +298,7 @@ function taskToInput(task: Task): TaskInput {
   if (task.body) input.body = task.body;
   if (task.hold) input.hold = { ...task.hold };
   if (task.priority !== undefined) input.priority = task.priority;
+  if (task.labels) input.labels = [...task.labels];
   input.created = task.created ?? null;
   if (task.closed) input.closed = task.closed;
   if (task.public_followup) {
@@ -426,6 +433,9 @@ export class MarkdownStore implements Store {
     if (query.state) items = items.filter((t) => t.state === query.state);
     if (query.repo) items = items.filter((t) => t.repo === query.repo);
     if (query.kind) items = items.filter((t) => t.kind === query.kind);
+    if (query.labels && query.labels.length > 0) {
+      items = items.filter((t) => matchesLabels(t, query.labels!));
+    }
     const total = items.length;
     if (query.limit !== undefined && query.limit >= 0) {
       items = items.slice(0, query.limit);
@@ -544,6 +554,8 @@ export class MarkdownStore implements Store {
     if (kind) task.kind = kind;
     if (repo) task.repo = repo;
     if (input.body) task.body = input.body;
+    const labels = normalizeLabels(input.labels);
+    if (labels.length > 0) task.labels = labels;
     const hold = normalizeHold(input.hold);
     if (hold) task.hold = hold;
     const priority = normalizePriority(input.priority);
@@ -739,6 +751,32 @@ export class MarkdownStore implements Store {
         if (task.priority !== priority) {
           task.priority = priority;
           markChanged("priority");
+        }
+      }
+      if (
+        patch.labels !== undefined ||
+        patch.addLabels !== undefined ||
+        patch.removeLabels !== undefined
+      ) {
+        let labels: string[];
+        if (patch.labels !== undefined) {
+          labels = normalizeLabels(patch.labels);
+        } else {
+          const removeLabels = normalizeLabels(patch.removeLabels);
+          labels = canonicalizeLabels([
+            ...(task.labels ?? []).filter(
+              (label) => !removeLabels.includes(label),
+            ),
+            ...normalizeLabels(patch.addLabels),
+          ]);
+        }
+        if (!sameLabels(task.labels, labels)) {
+          if (labels.length === 0) {
+            delete task.labels;
+          } else {
+            task.labels = labels;
+          }
+          markChanged("labels");
         }
       }
       if (patch.meta) {
